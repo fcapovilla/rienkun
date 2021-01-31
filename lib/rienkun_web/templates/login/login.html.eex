@@ -1,8 +1,10 @@
 <div class="row">
   <div class="column">
-    <h1>Rienkun</h1>
-    <p>Un clône du jeu "Just One".</p>
-    <p>Veuillez entrer votre nom pour vous joindre à la partie.</p>
+    <center>
+      <h1>Rienkun</h1>
+      <p>Un clône du jeu "Just One".</p>
+      <p>Veuillez entrer votre nom pour vous joindre à la partie.</p>
+    </center>
   </div>
 </div>
 <div class="row">
@@ -11,9 +13,12 @@
       <fieldset>
         <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
         <label for="name">Nom</label>
-        <input type="text" name="name" placeholder="Nom"/>
+        <input type="text" name="name"/>
         <input type="submit"/>
       </fieldset>
     </form>
   </div>
 </div>
+<footer>
+  <center>Frédérick Capovilla, 2021 - <a href="https://github.com/fcapovilla/rienkun">(Github)</a></center>
+</footer>
