@@ -1,10 +1,19 @@
 <div class="row">
-  <h1>Rienkun</h1>
-  <p>Un clône du jeu "Just One".</p>
-  <p>Veuillez entrer votre nom pour vous joindre à la partie.</p>
-  <form action="/" method="post">
-    <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
-    <input type="text" name="name" placeholder="Nom"/>
-    <input type="submit"/>
-  </form>
+  <div class="column">
+    <h1>Rienkun</h1>
+    <p>Un clône du jeu "Just One".</p>
+    <p>Veuillez entrer votre nom pour vous joindre à la partie.</p>
+  </div>
+</div>
+<div class="row">
+  <div class="column">
+    <form action="/" method="post">
+      <fieldset>
+        <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
+        <label for="name">Nom</label>
+        <input type="text" name="name" placeholder="Nom"/>
+        <input type="submit"/>
+      </fieldset>
+    </form>
+  </div>
 </div>
