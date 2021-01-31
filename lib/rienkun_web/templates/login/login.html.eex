@@ -1,8 +1,10 @@
-<div>
-    Veuillez entrer votre nom pour vous joindre à la partie.
-</div>
-<form action="/" method="post">
+<div class="row">
+  <h1>Rienkun</h1>
+  <p>Un clône du jeu "Just One".</p>
+  <p>Veuillez entrer votre nom pour vous joindre à la partie.</p>
+  <form action="/" method="post">
     <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
-    <input type="text" name="name"/>
+    <input type="text" name="name" placeholder="Nom"/>
     <input type="submit"/>
-</form>
+  </form>
+</div>
