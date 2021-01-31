@@ -1,0 +1,120 @@
+<div class="row">
+  <div class="column column-25">
+    <h2>Joueurs</h2>
+    <ul>
+    <%= for {user_id, user} <- @users do %>
+        <li>
+          <%= user[:name] %>
+          <%= if user_id == @current_user do %>(moi)<% end %>
+          <%= if user_id == @game.guesser do %>(Joueur actif)<% end %>
+          <%= if Map.has_key?(@game.clues, user_id) do %>(Indice envoyé)<% end %>
+        </li>
+    <% end %>
+    </ul>
+    <h2>Score</h2>
+    <div><%= @game.wins %> Victoires</div>
+    <div><%= @game.losses %> Défaites</div>
+  </div>
+  <div class="column column-75">
+    <%= if @game.state == :waiting_for_players do %>
+      Il faut au moins 3 joueurs pour commencer la partie. En attente de plus de joueurs...
+    <% end %>
+
+    <%= if @game.state == :ready do %>
+      Vous pouvez maintenant démarrer une partie à <%= Enum.count(@game.players) %> joueurs.
+      <button phx-click="start_game">Démarrer</button>
+    <% end %>
+
+    <%= if @game.state == :win do %>
+      <h2>Victoire!</h2>
+      <p>Le mot était bien <strong><%= @game.word %></strong>!</p>
+      <button phx-click="start_game">Rejouer</button>
+    <% end %>
+
+    <%= if @game.state == :lose do %>
+      <h2>Échec</h2>
+      Le mot était <strong><%= @game.word %></strong>.
+      <button phx-click="start_game">Rejouer</button>
+    <% end %>
+
+    <%= if @current_user == @game.guesser do %>
+
+      <%= if @game.state == :enter_clues do %>
+        En attente des indices des autres joueurs...
+      <% end %>
+
+      <%= if @game.state == :validate_clues do %>
+        En attente de la validation des indices des autres joueurs...
+      <% end %>
+
+      <%= if @game.state == :guess_word do %>
+        <h2>Vos indices</h2>
+        <ul>
+          <%= for {id, clue} <- @game.valid_clues do %>
+            <li><%= clue %></li>
+          <%= end %>
+        </ul>
+        <p>Devinez le mot mystère à l'aide des indices.</p>
+        <form phx-submit="guess_word">
+          <input type="text" name="word"/>
+          <input type="submit" value="Envoyer"/>
+        </form>
+      <% end %>
+
+    <% else %>
+
+      <%= if @game.state == :enter_clues do %>
+        <p>Le mot mystère est <strong><%= @game.word %></strong></p>
+        <p>Entrez un indice pour aider le joueur actif à deviner ce mot.</p>
+        <p>Votre indice doit être un seul mot. Tous les mots identiques ou invalides seront annulés.</p>
+        <%= if @game.clues[@current_user] do %>
+          Votre indice est: <strong><%= @game.clues[@current_user] %></strong>
+        <% end %>
+        <form phx-submit="add_clue">
+          <input type="text" name="word"/>
+          <input type="submit" value="Envoyer"/>
+        </form>
+      <% end %>
+
+      <%= if @game.state == :validate_clues do %>
+        <p>Le mot mystère est <strong><%= @game.word %></strong></p>
+        <p>Veuillez supprimer tous les mots identiques ou invalides dans la liste ci-dessous:</p>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 75%">Indice</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <%= for {id, clue} <- @game.clues do %>
+              <%= if Map.has_key?(@game.valid_clues, id) do %>
+                <tr>
+                  <td><%= clue %></td>
+                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>">Supprimer</button></td>
+                </tr>
+              <% else %>
+                <tr>
+                  <td><del><%= clue %></del></td>
+                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>">Inclure</button></td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+        <button phx-click="validation_done">Validation terminée</button>
+      <% end %>
+
+      <%= if @game.state == :guess_word do %>
+        <h2>Les indices</h2>
+        <ul>
+          <%= for {id, clue} <- @game.valid_clues do %>
+            <li><%= clue %></li>
+          <%= end %>
+        </ul>
+        <p>En attente de la réponse du joueur actif...</p>
+      <% end %>
+
+    <% end %>
+  </div>
+</section>
