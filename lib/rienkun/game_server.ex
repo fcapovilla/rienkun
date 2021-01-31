@@ -69,7 +69,7 @@ defmodule Rienkun.GameServer do
       guesser = List.last(state.players)
       players = [guesser | Enum.drop(state.players, -1) ]
       word =
-        File.read!("priv/static/words.txt")
+        File.read!("priv/words.txt")
         |> String.split("\n")
         |> Enum.random()
       %{state | state: :enter_clues, guesser: guesser, players: players, word: word, clues: %{}, valid_clues: %{}}
