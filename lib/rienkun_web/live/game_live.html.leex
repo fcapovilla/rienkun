@@ -108,6 +108,7 @@
 
     <%= if @game.state == :lose do %>
       <h2>Échec</h2>
+      <p>Le jouer actif a écrit "<%= @game.word_tried %>".</p>
       <p>Le mot était <strong><%= @game.word %></strong>.</p>
       <button phx-click="start_game">Rejouer</button>
     <% end %>

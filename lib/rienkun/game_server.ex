@@ -55,6 +55,7 @@ defmodule Rienkun.GameServer do
       guesser: nil,
       wins: 0,
       losses: 0,
+      word_tried: nil,
     }}
   end
 
@@ -66,7 +67,7 @@ defmodule Rienkun.GameServer do
       File.read!("priv/words.txt")
       |> String.split("\n")
       |> Enum.random()
-    state = %{state | state: :enter_clues, guesser: guesser.id, players: players, word: word, clues: %{}, valid_clues: %{}}
+    state = %{state | state: :enter_clues, guesser: guesser.id, players: players, word: word, clues: %{}, valid_clues: %{}, word_tried: nil}
     broadcast!(state)
     {:reply, :ok, state}
   end
@@ -111,7 +112,7 @@ defmodule Rienkun.GameServer do
       if String.downcase(word) == String.downcase(state.word) do
         %{state | state: :win, wins: state.wins + 1}
       else
-        %{state | state: :lose, losses: state.losses + 1}
+        %{state | state: :lose, losses: state.losses + 1, word_tried: word}
       end
     broadcast!(state)
     {:reply, :ok, state}
