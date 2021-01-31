@@ -38,7 +38,7 @@
         <%= if @game.clues[@current_user] do %>
           Votre indice est: <strong><%= @game.clues[@current_user] %></strong>
         <% end %>
-        <form phx-submit="add_clue">
+        <form phx-submit="add_clue" autocomplete="off">
           <input type="text" name="word"/>
           <input type="submit" value="Envoyer"/>
         </form>
@@ -87,7 +87,7 @@
           <% end %>
         </ul>
         <p>Devinez le mot mystère à l'aide des indices.</p>
-        <form phx-submit="guess_word">
+        <form phx-submit="guess_word" autocomplete="off">
           <input type="text" name="word"/>
           <input type="submit" value="Envoyer"/>
         </form>
