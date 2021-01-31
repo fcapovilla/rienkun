@@ -151,10 +151,13 @@ defmodule Rienkun.GameServer do
   def handle_leaves(state, players) do
     leaves = Enum.map(players, fn {id, %{metas: [meta|_]}} -> Map.put(meta, :id, id) end)
     players = state.players -- leaves
-    if Enum.count(players) >= 3 do
-      %{state | players: players}
-    else
-      %{state | state: :waiting_for_players, players: players, word: nil, clues: %{}}
+    case Enum.count(players) do
+      0 ->
+        %{state | state: :waiting_for_players, players: players, word: nil, clues: %{}, wins: 0, losses: 0}
+      x when x < 3 ->
+        %{state | state: :waiting_for_players, players: players, word: nil, clues: %{}}
+      _ ->
+        %{state | players: players}
     end
   end
 
