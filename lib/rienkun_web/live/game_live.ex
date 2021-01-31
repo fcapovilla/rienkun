@@ -32,8 +32,11 @@ defmodule RienkunWeb.GameLive do
   def handle_info(%{event: :state_changed, payload: state}, socket) do
     {
       :noreply,
-      socket
-      |> assign(:game, state)
+      if socket.assigns.game.state != state.state do
+        socket |> clear_flash() |> assign(:game, state)
+      else
+        socket |> assign(:game, state)
+      end
     }
   end
 
@@ -45,8 +48,15 @@ defmodule RienkunWeb.GameLive do
 
   @impl true
   def handle_event("add_clue", %{"word" => word}, socket) do
-    Rienkun.GameServer.add_clue(socket.assigns.current_user, word)
-    {:noreply, socket}
+    cond do
+      word == "" ->
+        {:noreply, socket |> put_flash(:error, "Votre indice ne peut pas être vide!")}
+      String.contains?(word, " ") ->
+        {:noreply, socket |> put_flash(:error, "Votre indice doit être un seul mot!")}
+      true ->
+        Rienkun.GameServer.add_clue(socket.assigns.current_user, word)
+        {:noreply, socket |> clear_flash()}
+    end
   end
 
   @impl true
@@ -69,7 +79,14 @@ defmodule RienkunWeb.GameLive do
 
   @impl true
   def handle_event("guess_word", %{"word" => word}, socket) do
-    Rienkun.GameServer.guess_word(word)
-    {:noreply, socket}
+    cond do
+      word == "" ->
+        {:noreply, socket |> put_flash(:error, "Votre réponse ne peut pas être vide!")}
+      String.contains?(word, " ") ->
+        {:noreply, socket |> put_flash(:error, "Votre réponse doit être un seul mot!")}
+      true ->
+        Rienkun.GameServer.guess_word(word)
+        {:noreply, socket}
+    end
   end
 end

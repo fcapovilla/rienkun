@@ -8,8 +8,8 @@
     <%= for user <- @game.players do %>
         <li>
           <%= user.name %>
-          <%= if user.id == @current_user do %>(moi)<% end %>
-          <%= if user.id == @game.guesser do %>(Joueur actif)<% end %>
+          <%= if user.id == @current_user do %>(Moi)<% end %>
+          <%= if user.id == @game.guesser do %>(Actif)<% end %>
           <%= if Map.has_key?(@game.clues, user.id) do %>(Indice envoyé)<% end %>
         </li>
     <% end %>

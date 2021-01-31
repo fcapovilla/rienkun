@@ -108,7 +108,7 @@ defmodule Rienkun.GameServer do
   @impl true
   def handle_call({:guess_word, word}, _from, %{state: :guess_word} = state) do
     state =
-      if word == state.word do
+      if String.downcase(word) == String.downcase(state.word) do
         %{state | state: :win, wins: state.wins + 1}
       else
         %{state | state: :lose, losses: state.losses + 1}
