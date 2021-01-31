@@ -80,9 +80,9 @@
       <%= if @current_user == @game.guesser do %>
         <h2>Vos indices</h2>
         <ul>
-          <%= for {id, clue} <- @game.valid_clues do %>
+          <%= for {_id, clue} <- @game.valid_clues do %>
             <li><%= clue %></li>
-          <%= end %>
+          <% end %>
         </ul>
         <p>Devinez le mot mystère à l'aide des indices.</p>
         <form phx-submit="guess_word">
@@ -92,9 +92,9 @@
       <% else %>
         <h2>Les indices</h2>
         <ul>
-          <%= for {id, clue} <- @game.valid_clues do %>
+          <%= for {_id, clue} <- @game.valid_clues do %>
             <li><%= clue %></li>
-          <%= end %>
+          <% end %>
         </ul>
         <p>En attente de la réponse du joueur actif...</p>
       <% end %>
