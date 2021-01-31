@@ -13,7 +13,7 @@
        |> redirect(to: Routes.game_path(conn, :game))
      else
        conn
-       |> put_flash(:info, "Please enter a name.")
+       |> put_flash(:error, "Veuillez entrer un nom.")
        |> redirect(to: Routes.login_path(conn, :index))
      end
    end
