@@ -61,8 +61,8 @@ defmodule Rienkun.GameServer do
 
   @impl true
   def handle_call({:start_game}, _from, state) do
-    guesser = List.last(state.players)
-    players = [guesser | Enum.drop(state.players, -1)]
+    guesser = List.first(state.players)
+    players = List.insert_at(Enum.drop(state.players, 0), -1, guesser)
     word =
       File.read!("priv/words.txt")
       |> String.split("\n")
