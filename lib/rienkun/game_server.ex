@@ -157,7 +157,7 @@ defmodule Rienkun.GameServer do
       x when x < 3 ->
         %{state | state: :waiting_for_players, players: players, word: nil, clues: %{}}
       _ ->
-        if Enum.member?(players, state.guesser) do
+        if state.guesser != nil and Enum.any?(players, &(&1.id == state.guesser)) do
           %{state | players: players}
         else
           %{state | state: :ready, players: players, guesser: nil}
