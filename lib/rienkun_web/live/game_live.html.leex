@@ -86,7 +86,10 @@
             <% end %>
           </tbody>
         </table>
-        <button phx-click="validation_done">Validation terminée</button>
+        <button phx-click="validation_vote">Validation terminée</button>
+        <%= if @game.validation_votes != %{} do %>
+          <p>Votes: <%= Enum.count(@game.validation_votes) %>/<%= Enum.count(@game.players) - 1 %></p>
+        <% end %>
       <% end %>
     <% end %>
 
@@ -116,7 +119,9 @@
 
     <%= if @game.state == :guess_vote do %>
       <%= if @current_user == @game.guesser do %>
-        En attente du vote des autres joueurs...
+        <p>Vous avez écrit <strong><%= @game.word_tried %></strong>.</p>
+        <p>Le mot était <strong><%= @game.word %></strong>.</p>
+        <p>En attente du vote des autres joueurs...</p>
       <% else %>
         <p>Le joueur actif a écrit <strong><%= @game.word_tried %></strong>.</p>
         <p>Le mot était <strong><%= @game.word %></strong>.</p>

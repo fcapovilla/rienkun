@@ -72,8 +72,8 @@ defmodule RienkunWeb.GameLive do
   end
 
   @impl true
-  def handle_event("validation_done", _value, socket) do
-    Rienkun.GameServer.validation_done()
+  def handle_event("validation_vote", _value, socket) do
+    Rienkun.GameServer.validation_vote(socket.assigns.current_user)
     {:noreply, socket}
   end
 

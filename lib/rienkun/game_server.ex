@@ -28,8 +28,8 @@ defmodule Rienkun.GameServer do
     GenServer.call(__MODULE__, {:validate_clue, player})
   end
 
-  def validation_done() do
-    GenServer.call(__MODULE__, {:validation_done})
+  def validation_vote(player) do
+    GenServer.call(__MODULE__, {:validation_vote, player})
   end
 
   def guess_word(word) do
@@ -66,6 +66,7 @@ defmodule Rienkun.GameServer do
       losses: 0,
       word_tried: nil,
       reset_votes: %{},
+      validation_votes: %{},
       win_votes: %{},
     }}
   end
@@ -87,6 +88,7 @@ defmodule Rienkun.GameServer do
       valid_clues: %{},
       word_tried: nil,
       reset_votes: %{},
+      validation_votes: %{},
       win_votes: %{},
     }
     {:reply, :ok, broadcast!(state)}
@@ -117,8 +119,14 @@ defmodule Rienkun.GameServer do
   end
 
   @impl true
-  def handle_call({:validation_done}, _from, %{state: :validate_clues} = state) do
-    state = %{state | state: :guess_word}
+  def handle_call({:validation_vote, player}, _from, %{state: :validate_clues} = state) do
+    validation_votes = Map.put(state.validation_votes, player, true)
+    state =
+      if Enum.count(validation_votes) > (Enum.count(state.players) - 1) / 2 do
+        %{state | state: :guess_word, validation_votes: %{}}
+      else
+        %{state | validation_votes: validation_votes}
+      end
     {:reply, :ok, broadcast!(state)}
   end
 
@@ -133,7 +141,7 @@ defmodule Rienkun.GameServer do
     win_votes = Map.put(state.win_votes, player, vote)
     total_same = win_votes |> Enum.filter(&(elem(&1, 1) == vote)) |> Enum.count()
     state =
-      if total_same > Enum.count(state.players) / 2 do
+      if total_same > (Enum.count(state.players) - 1) / 2 do
         if vote == :win do
           %{state | state: :win, wins: state.wins + 1, win_votes: win_votes}
         else
