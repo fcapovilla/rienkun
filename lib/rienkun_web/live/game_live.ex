@@ -11,21 +11,25 @@ defmodule RienkunWeb.GameLive do
   def mount(_params, session, socket) do
     name = session["name"]
     player_id = session["player_id"]
-    if connected?(socket) do
-      {:ok, _} = Presence.track(self(), @presence, player_id, %{
-        name: name,
-      })
+    if name && player_id do
+      if connected?(socket) do
+        {:ok, _} = Presence.track(self(), @presence, player_id, %{
+          name: name,
+        })
 
-      Phoenix.PubSub.subscribe(PubSub, @game)
+        Phoenix.PubSub.subscribe(PubSub, @game)
+      end
+
+      {
+        :ok,
+        socket
+        |> assign(:current_user, player_id)
+        |> assign(:users, %{})
+        |> assign(:game, Rienkun.GameServer.get_state())
+      }
+    else
+      {:ok, socket |> redirect(to: Routes.login_path(socket, :index))}
     end
-
-    {
-      :ok,
-      socket
-      |> assign(:current_user, player_id)
-      |> assign(:users, %{})
-      |> assign(:game, Rienkun.GameServer.get_state())
-    }
   end
 
   @impl true
