@@ -10,7 +10,8 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :rienkun, RienkunWeb.Endpoint,
-  url: [host: "rienkun.gigalixirapp.com", port: 80],
+  force_ssl: [hsts: true],
+  url: [host: "rienkun.gigalixirapp.com", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
