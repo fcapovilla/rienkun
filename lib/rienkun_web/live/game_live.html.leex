@@ -9,10 +9,14 @@
     <ul>
       <%= for {id, user} <- @game.players do %>
         <li>
-          <%= user.name %>
-          <%= if id == @current_user do %>(Moi)<% end %>
-          <%= if id == @game.guesser do %>(Actif)<% end %>
-          <%= if Map.has_key?(@game.clues, id) do %>(Indice envoyé)<% end %>
+          <%= if id == @current_user do %><span title="Moi">👤</span><% end %>
+          <%= if id == @game.guesser do %>
+            <strong><%= user.name %></strong>
+          <% else %>
+            <%= user.name %>
+          <% end %>
+          <%= if id == @game.guesser do %><span title="Actif">⭐</span><% end %>
+          <%= if Map.has_key?(@game.clues, id) do %><span title="Indice envoyé">👍</span><% end %>
         </li>
       <% end %>
     </ul>
@@ -73,14 +77,14 @@
                 <td><%= @game.players[id].name %></td>
                 <%= if Map.has_key?(@game.valid_clues, id) do %>
                   <td><%= clue %></td>
-                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>">&gt;&gt;</button></td>
+                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>" title="Supprimer">❌</button></td>
                   <td></td>
                   <td></td>
                 <% else %>
                   <td></td>
                   <td></td>
                   <td><del><%= clue %></del></td>
-                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>">&lt;&lt;</button></td>
+                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>" title="Restaurer">⏪</button></td>
                 <% end %>
               </tr>
             <% end %>
@@ -126,10 +130,10 @@
         <p>Le joueur actif a écrit <strong><%= @game.word_tried %></strong>.</p>
         <p>Le mot était <strong><%= @game.word %></strong>.</p>
         <p>Est-ce que le mot est bon?</p>
-        <button phx-click="win_vote" phx-value-vote="win">Oui</button>
-        <button phx-click="win_vote" phx-value-vote="lose">Non</button>
+        <button phx-click="win_vote" phx-value-vote="win">Oui 👍</button>
+        <button phx-click="win_vote" phx-value-vote="lose">Non 👎</button>
         <%= if Map.has_key?(@game.win_votes, @current_user) do %>
-          <p>Votre réponse : <strong><%= if @game.win_votes[@current_user] == :win, do: "Oui", else: "Non" %></strong></p>
+          <p>Votre réponse : <strong><%= if @game.win_votes[@current_user] == :win, do: "Oui 👍", else: "Non 👎" %></strong></p>
         <% end %>
       <% end %>
     <% end %>
