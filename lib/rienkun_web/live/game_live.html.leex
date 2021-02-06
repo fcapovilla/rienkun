@@ -16,6 +16,12 @@
         </li>
       <% end %>
     </ul>
+    <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
+      <button phx-click="reset_vote">Annuler</button>
+      <%= if @game.reset_votes != %{} do %>
+        <p>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></p>
+      <% end %>
+    <% end %>
   </div>
   <div class="column column-75">
     <%= if @game.state == :waiting_for_players do %>

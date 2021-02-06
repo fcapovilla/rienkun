@@ -40,6 +40,10 @@ defmodule Rienkun.GameServer do
     GenServer.call(__MODULE__, {:win_vote, player, vote})
   end
 
+  def reset_vote(player) do
+    GenServer.call(__MODULE__, {:reset_vote, player})
+  end
+
   def get_state() do
     GenServer.call(__MODULE__, {:get_state})
   end
@@ -137,6 +141,18 @@ defmodule Rienkun.GameServer do
         end
       else
         %{state | win_votes: win_votes}
+      end
+    {:reply, :ok, broadcast!(state)}
+  end
+
+  @impl true
+  def handle_call({:reset_vote, player}, _from, state) do
+    reset_votes = Map.put(state.reset_votes, player, true)
+    state =
+      if Enum.count(reset_votes) > Enum.count(state.players) / 2 do
+        %{state | state: :ready, reset_votes: %{}}
+      else
+        %{state | reset_votes: reset_votes}
       end
     {:reply, :ok, broadcast!(state)}
   end

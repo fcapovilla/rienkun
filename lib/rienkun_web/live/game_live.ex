@@ -90,6 +90,12 @@ defmodule RienkunWeb.GameLive do
   end
 
   @impl true
+  def handle_event("reset_vote", _value, socket) do
+    Rienkun.GameServer.reset_vote(socket.assigns.current_user)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("guess_word", %{"word" => word}, socket) do
     cond do
       word == "" ->
