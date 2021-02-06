@@ -7,12 +7,12 @@
     </p>
     <h2>Joueurs</h2>
     <ul>
-      <%= for user <- @game.players do %>
+      <%= for {id, user} <- @game.players do %>
         <li>
           <%= user.name %>
-          <%= if user.id == @current_user do %>(Moi)<% end %>
-          <%= if user.id == @game.guesser do %>(Actif)<% end %>
-          <%= if Map.has_key?(@game.clues, user.id) do %>(Indice envoyé)<% end %>
+          <%= if id == @current_user do %>(Moi)<% end %>
+          <%= if id == @game.guesser do %>(Actif)<% end %>
+          <%= if Map.has_key?(@game.clues, id) do %>(Indice envoyé)<% end %>
         </li>
       <% end %>
     </ul>
@@ -54,23 +54,29 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 75%">Indice</th>
-              <th>Action</th>
+              <th style="width: 30%">Joueur</th>
+              <th style="width: 30%">Indices valides</th>
+              <th style="width: 5%"></th>
+              <th style="width: 30%">Indices supprimés</th>
+              <th style="width: 5%"></th>
             </tr>
           </thead>
           <tbody>
             <%= for {id, clue} <- @game.clues do %>
-              <%= if Map.has_key?(@game.valid_clues, id) do %>
-                <tr>
+              <tr>
+                <td><%= @game.players[id].name %></td>
+                <%= if Map.has_key?(@game.valid_clues, id) do %>
                   <td><%= clue %></td>
-                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>">Supprimer</button></td>
-                </tr>
-              <% else %>
-                <tr>
+                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>">&gt;&gt;</button></td>
+                  <td></td>
+                  <td></td>
+                <% else %>
+                  <td></td>
+                  <td></td>
                   <td><del><%= clue %></del></td>
-                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>">Inclure</button></td>
-                </tr>
-              <% end %>
+                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>">&lt;&lt;</button></td>
+                <% end %>
+              </tr>
             <% end %>
           </tbody>
         </table>
@@ -99,6 +105,21 @@
           <% end %>
         </ul>
         <p>En attente de la réponse du joueur actif...</p>
+      <% end %>
+    <% end %>
+
+    <%= if @game.state == :guess_vote do %>
+      <%= if @current_user == @game.guesser do %>
+        En attente du vote des autres joueurs...
+      <% else %>
+        <p>Le joueur actif a écrit <strong><%= @game.word_tried %></strong>.</p>
+        <p>Le mot était <strong><%= @game.word %></strong>.</p>
+        <p>Est-ce que le mot est bon?</p>
+        <button phx-click="win_vote" phx-value-vote="win">Oui</button>
+        <button phx-click="win_vote" phx-value-vote="lose">Non</button>
+        <%= if Map.has_key?(@game.win_votes, @current_user) do %>
+          <p>Votre réponse : <strong><%= if @game.win_votes[@current_user] == :win, do: "Oui", else: "Non" %></strong></p>
+        <% end %>
       <% end %>
     <% end %>
 

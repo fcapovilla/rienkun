@@ -78,6 +78,18 @@ defmodule RienkunWeb.GameLive do
   end
 
   @impl true
+  def handle_event("win_vote", %{"vote" => "win"}, socket) do
+    Rienkun.GameServer.win_vote(socket.assigns.current_user, :win)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("win_vote", %{"vote" => "lose"}, socket) do
+    Rienkun.GameServer.win_vote(socket.assigns.current_user, :lose)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("guess_word", %{"word" => word}, socket) do
     cond do
       word == "" ->
