@@ -9,14 +9,28 @@
     <ul>
       <%= for {id, user} <- @game.players do %>
         <li>
-          <%= if id == @current_user do %><span title="Moi">👤</span><% end %>
           <%= if id == @game.guesser do %>
             <strong><%= user.name %></strong>
           <% else %>
             <%= user.name %>
           <% end %>
           <%= if id == @game.guesser do %><span title="Actif">⭐</span><% end %>
-          <%= if Map.has_key?(@game.clues, id) do %><span title="Indice envoyé">👍</span><% end %>
+          <%= if @game.state == :enter_clues && Map.has_key?(@game.clues, id) do %>
+            <span title="Indice envoyé">👍</span>
+          <% end %>
+          <%= if @game.state == :validate_clues && Map.has_key?(@game.validation_votes, id) do %>
+            <span title="Vote envoyé">👍</span>
+          <% end %>
+          <%= if @game.state == :guess_vote && Map.has_key?(@game.win_votes, id) do %>
+            <span title="Vote envoyé">
+              <%= if @game.win_votes[id] == :win do %>
+                👍
+              <% else %>
+                👎
+              <% end %>
+            </span>
+          <% end %>
+          <%= if id == @current_user do %><span title="Moi">👤</span><% end %>
         </li>
       <% end %>
     </ul>
@@ -32,16 +46,19 @@
   </div>
   <div class="column column-75">
     <%= if @game.state == :waiting_for_players do %>
+      <h1>Salle d'attente</h2>
       <p>Il faut au moins 3 joueurs pour commencer la partie.</p>
       <p>En attente de plus de joueurs...</p>
     <% end %>
 
     <%= if @game.state == :ready do %>
+      <h1>Salle d'attente</h2>
       <p>Vous pouvez maintenant démarrer une partie à <%= Enum.count(@game.players) %> joueurs.</p>
       <button phx-click="start_game">Démarrer</button>
     <% end %>
 
     <%= if @game.state == :enter_clues do %>
+      <h1>1 - Créer les indices</h1>
       <%= if @current_user == @game.guesser do %>
         En attente des indices des autres joueurs...
       <% else %>
@@ -59,6 +76,7 @@
     <% end %>
 
     <%= if @game.state == :validate_clues do %>
+      <h1>2 - Valider les indices</h1>
       <%= if @current_user == @game.guesser do %>
         En attente de la validation des indices des autres joueurs...
       <% else %>
@@ -67,11 +85,9 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 30%">Joueur</th>
-              <th style="width: 30%">Indices valides</th>
-              <th style="width: 5%"></th>
-              <th style="width: 30%">Indices supprimés</th>
-              <th style="width: 5%"></th>
+              <th style="width: 20%">Joueur</th>
+              <th style="width: 40%" colspan="2">Indices valides</th>
+              <th style="width: 40%" colspan="2">Indices supprimés</th>
             </tr>
           </thead>
           <tbody>
@@ -80,27 +96,26 @@
                 <td><%= @game.players[id].name %></td>
                 <%= if Map.has_key?(@game.valid_clues, id) do %>
                   <td><%= clue %></td>
-                  <td><button phx-click="invalidate_clue" phx-value-id="<%= id %>" title="Supprimer">❌</button></td>
+                  <td><button class="button button-outline" phx-click="invalidate_clue" phx-value-id="<%= id %>" title="Supprimer">❌</button></td>
                   <td></td>
                   <td></td>
                 <% else %>
                   <td></td>
                   <td></td>
                   <td><del><%= clue %></del></td>
-                  <td><button phx-click="validate_clue" phx-value-id="<%= id %>" title="Restaurer">⏪</button></td>
+                  <td><button class="button button-outline" phx-click="validate_clue" phx-value-id="<%= id %>" title="Restaurer">⏪</button></td>
                 <% end %>
               </tr>
             <% end %>
           </tbody>
         </table>
         <button phx-click="validation_vote">Validation terminée</button>
-        <%= if @game.validation_votes != %{} do %>
-          <p>Votes: <%= Enum.count(@game.validation_votes) %>/<%= Enum.count(@game.players) - 1 %></p>
-        <% end %>
+        <p>Votes: <%= Enum.count(@game.validation_votes) %>/<%= Enum.count(@game.players) - 1 %></p>
       <% end %>
     <% end %>
 
     <%= if @game.state == :guess_word do %>
+      <h1>3 - Deviner le mot</h1>
       <%= if @current_user == @game.guesser do %>
         <h2>Vos indices</h2>
         <ul>
@@ -114,6 +129,7 @@
           <input type="submit" value="Envoyer"/>
         </form>
       <% else %>
+        <p>Le mot mystère est <strong><%= @game.word %></strong></p>
         <h2>Les indices</h2>
         <ul>
           <%= for {_id, clue} <- @game.valid_clues do %>
@@ -125,6 +141,7 @@
     <% end %>
 
     <%= if @game.state == :guess_vote do %>
+      <h1>4 - Confirmer le mot</h1>
       <%= if @current_user == @game.guesser do %>
         <p>Vous avez écrit <strong><%= @game.word_tried %></strong>.</p>
         <p>Le mot était <strong><%= @game.word %></strong>.</p>
@@ -142,13 +159,13 @@
     <% end %>
 
     <%= if @game.state == :win do %>
-      <h2>Victoire!</h2>
+      <h1>Victoire!</h1>
       <p>Le mot était bien <strong><%= @game.word %></strong>!</p>
       <button phx-click="start_game">Rejouer</button>
     <% end %>
 
     <%= if @game.state == :lose do %>
-      <h2>Échec</h2>
+      <h1>Échec</h1>
       <p>Le joueur actif a écrit "<%= @game.word_tried %>".</p>
       <p>Le mot était <strong><%= @game.word %></strong>.</p>
       <button phx-click="start_game">Rejouer</button>
