@@ -13,7 +13,7 @@
       <fieldset>
         <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
         <label for="name">Nom</label>
-        <input type="text" name="name"/>
+        <input type="text" name="name" autofocus/>
         <input type="submit"/>
       </fieldset>
     </form>
