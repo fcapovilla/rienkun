@@ -93,7 +93,7 @@
           <tbody>
             <%= for {id, clue} <- @game.clues do %>
               <tr>
-                <td><%= @game.players[id].name %></td>
+                <td><%= if Map.has_key?(@game.players, id), do: @game.players[id].name, else: "" %></td>
                 <%= if Map.has_key?(@game.valid_clues, id) do %>
                   <td><%= clue %></td>
                   <td><button class="button button-outline" phx-click="invalidate_clue" phx-value-id="<%= id %>" title="Supprimer">❌</button></td>
