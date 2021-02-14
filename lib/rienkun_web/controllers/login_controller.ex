@@ -4,11 +4,14 @@
    def index(conn, params) do
      conn
      |> assign(:name, get_session(conn, :name))
-     |> assign(:room, Map.get(params, "room", get_session(conn, :room)))
+     |> assign(:room, Map.get(params, "room", get_session(conn, :room)) |> String.trim() |> String.slice(0..50))
      |> render("login.html")
    end
 
    def login(conn, %{"name" => name, "room" => room}) do
+     name = name |> String.trim() |> String.slice(0..50)
+     room = room |> String.trim() |> String.slice(0..50)
+
      if name != "" and room != "" do
        conn
        |> put_session(:name, name)

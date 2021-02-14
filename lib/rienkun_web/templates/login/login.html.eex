@@ -15,9 +15,9 @@
       <fieldset>
         <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
         <label for="name">Nom du joueur</label>
-        <input type="text" name="name" value="<%= @name %>" autofocus/>
+        <input type="text" name="name" maxlength="50" value="<%= @name %>" autofocus/>
         <label for="name">Nom de la salle</label>
-        <input type="text" name="room" value="<%= @room %>"/>
+        <input type="text" name="room" maxlength="50" value="<%= @room %>"/>
         <input type="submit" value="Entrer"/>
       </fieldset>
     </form>
