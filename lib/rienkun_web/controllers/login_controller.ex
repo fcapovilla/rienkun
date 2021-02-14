@@ -2,9 +2,11 @@
    use RienkunWeb, :controller
 
    def index(conn, params) do
+     room = (Map.get(params, "room", get_session(conn, :room)) || "") |> String.trim() |> String.slice(0..50)
+
      conn
      |> assign(:name, get_session(conn, :name))
-     |> assign(:room, Map.get(params, "room", get_session(conn, :room)) |> String.trim() |> String.slice(0..50))
+     |> assign(:room, room)
      |> render("login.html")
    end
 
