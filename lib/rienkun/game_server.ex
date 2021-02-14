@@ -3,58 +3,60 @@ defmodule Rienkun.GameServer do
 
   alias Rienkun.PubSub
 
-  @presence "rienkun:presence"
-  @game "rienkun:game"
-
   # Client Code
 
-  def start_link(_opts) do
-    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(room) do
+    GenServer.start(__MODULE__, room, name: {:via, Registry, {Rienkun.RoomRegistry, room}})
   end
 
-  def start_game() do
-    GenServer.call(__MODULE__, {:start_game})
+  def get_pid(room) do
+    GenServer.whereis({:via, Registry, {Rienkun.RoomRegistry, room}})
   end
 
-  def add_clue(player, clue) do
-    GenServer.call(__MODULE__, {:add_clue, player, clue})
+  def start_game(room) do
+    GenServer.call(get_pid(room), {:start_game})
   end
 
-  def invalidate_clue(player) do
-    GenServer.call(__MODULE__, {:invalidate_clue, player})
+  def add_clue(room, player, clue) do
+    GenServer.call(get_pid(room), {:add_clue, player, clue})
   end
 
-  def validate_clue(player) do
-    GenServer.call(__MODULE__, {:validate_clue, player})
+  def invalidate_clue(room, player) do
+    GenServer.call(get_pid(room), {:invalidate_clue, player})
   end
 
-  def validation_vote(player) do
-    GenServer.call(__MODULE__, {:validation_vote, player})
+  def validate_clue(room, player) do
+    GenServer.call(get_pid(room), {:validate_clue, player})
   end
 
-  def guess_word(word) do
-    GenServer.call(__MODULE__, {:guess_word, word})
+  def validation_vote(room, player) do
+    GenServer.call(get_pid(room), {:validation_vote, player})
   end
 
-  def win_vote(player, vote) do
-    GenServer.call(__MODULE__, {:win_vote, player, vote})
+  def guess_word(room, word) do
+    GenServer.call(get_pid(room), {:guess_word, word})
   end
 
-  def reset_vote(player) do
-    GenServer.call(__MODULE__, {:reset_vote, player})
+  def win_vote(room, player, vote) do
+    GenServer.call(get_pid(room), {:win_vote, player, vote})
   end
 
-  def get_state() do
-    GenServer.call(__MODULE__, {:get_state})
+  def reset_vote(room, player) do
+    GenServer.call(get_pid(room), {:reset_vote, player})
+  end
+
+  def get_state(room) do
+    GenServer.call(get_pid(room), {:get_state})
   end
 
   # GenServer code
 
   @impl true
-  def init(:ok) do
-    Phoenix.PubSub.subscribe(PubSub, @presence)
+  def init(room) do
+    Phoenix.PubSub.subscribe(PubSub, "rienkun:presence:" <> room)
 
     {:ok, %{
+      room: room,
       state: :waiting_for_players,
       word: nil,
       clues: %{},
@@ -176,7 +178,12 @@ defmodule Rienkun.GameServer do
       state
       |> handle_joins(diff.joins)
       |> handle_leaves(diff.leaves)
-    {:noreply, broadcast!(state)}
+
+    if Enum.count(state.players) > 0 do
+      {:noreply, broadcast!(state)}
+    else
+      {:stop, :normal, state}
+    end
   end
 
   defp handle_joins(state, players) do
@@ -199,8 +206,6 @@ defmodule Rienkun.GameServer do
     players = Map.drop(state.players, Map.keys(leaves))
     guess_order = state.guess_order -- Map.keys(leaves)
     case Enum.count(players) do
-      0 ->
-        %{state | state: :waiting_for_players, players: players, guess_order: guess_order, wins: 0, losses: 0}
       x when x < 3 ->
         %{state | state: :waiting_for_players, players: players, guess_order: guess_order}
       _ ->
@@ -209,7 +214,7 @@ defmodule Rienkun.GameServer do
   end
 
   defp broadcast!(state) do
-    Phoenix.PubSub.broadcast!(PubSub, @game, %{event: :state_changed, payload: state})
+    Phoenix.PubSub.broadcast!(PubSub, "rienkun:room:" <> state.room, %{event: :state_changed, payload: state})
     state
   end
 end

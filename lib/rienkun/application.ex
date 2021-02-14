@@ -14,7 +14,8 @@ defmodule Rienkun.Application do
       RienkunWeb.Presence,
       # Start the Endpoint (http/https)
       RienkunWeb.Endpoint,
-      Rienkun.GameServer,
+      {Registry, keys: :unique, name: Rienkun.RoomRegistry},
+      Rienkun.GameSupervisor,
       # Start a worker by calling: Rienkun.Worker.start_link(arg)
       # {Rienkun.Worker, arg}
     ]

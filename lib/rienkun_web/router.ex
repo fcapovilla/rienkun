@@ -18,7 +18,7 @@ defmodule RienkunWeb.Router do
     pipe_through :browser
     get "/", LoginController, :index
     post "/", LoginController, :login
-    live "/game", GameLive, :game
+    live "/game/:room", GameLive, :game
   end
 
   # Other scopes may use custom stacks.
