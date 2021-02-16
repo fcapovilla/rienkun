@@ -113,12 +113,14 @@ defmodule Rienkun.GameServer do
     state = %{state | valid_clues: Map.drop(state.valid_clues, [player])}
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:invalidate_clue, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:validate_clue, player}, _from, %{state: :validate_clues} = state) do
     state = %{state | valid_clues: Map.put(state.valid_clues, player, state.clues[player])}
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:validate_clue, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:validation_vote, player}, _from, %{state: :validate_clues} = state) do
@@ -131,12 +133,14 @@ defmodule Rienkun.GameServer do
       end
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:validation_vote, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:guess_word, word}, _from, %{state: :guess_word} = state) do
     state = %{state | state: :guess_vote, word_tried: word}
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:guess_word, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:win_vote, player, vote}, _from, %{state: :guess_vote} = state) do
@@ -154,6 +158,7 @@ defmodule Rienkun.GameServer do
       end
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:win_vote, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:reset_vote, player}, _from, state) do
