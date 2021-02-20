@@ -97,16 +97,17 @@ defmodule Rienkun.GameServer do
   end
 
   @impl true
-  def handle_call({:add_clue, player, clue}, _from, state) do
+  def handle_call({:add_clue, player, clue}, _from, %{state: :enter_clues} = state) do
     clues = Map.put(state.clues, player, clue)
     state =
       if Enum.count(clues) == Enum.count(state.players) - 1 do
-        %{state | state: :validate_clues, clues: clues, valid_clues: clues}
+        %{state | state: :validate_clues, clues: clues, valid_clues: validate_clues(clues)}
       else
         %{state | clues: clues}
       end
     {:reply, :ok, broadcast!(state)}
   end
+  def handle_call({:add_clue, _player, _clue}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:invalidate_clue, player}, _from, %{state: :validate_clues} = state) do
@@ -137,7 +138,12 @@ defmodule Rienkun.GameServer do
 
   @impl true
   def handle_call({:guess_word, word}, _from, %{state: :guess_word} = state) do
-    state = %{state | state: :guess_vote, word_tried: word}
+    state =
+      if String.downcase(word) == String.downcase(state.word) do
+        %{state | state: :win, wins: state.wins + 1}
+      else
+        %{state | state: :guess_vote, word_tried: word}
+      end
     {:reply, :ok, broadcast!(state)}
   end
   def handle_call({:guess_word, _player}, _from, state), do: {:reply, :ok, state}
@@ -217,12 +223,13 @@ defmodule Rienkun.GameServer do
     end
   end
 
-  defp get_next_guesser(players, guess_order, 0) do
+  defp get_next_guesser(players, guess_order, limit \\ 20)
+  defp get_next_guesser(players, _guess_order, 0) do
     # Could not find a guesser in time. Reset guess order.
     guess_order = Map.keys(players)
     {List.last(guess_order), guess_order}
   end
-  defp get_next_guesser(players, guess_order, limit \\ 20) do
+  defp get_next_guesser(players, guess_order, limit) do
     guesser = List.first(guess_order)
     guess_order = List.insert_at(List.delete_at(guess_order, 0), -1, guesser)
     if Map.has_key?(players, guesser) do
@@ -230,6 +237,19 @@ defmodule Rienkun.GameServer do
     else
       get_next_guesser(players, guess_order, limit - 1)
     end
+  end
+
+  defp validate_clues(clues) do
+    Enum.filter(clues, fn {key1, word1} ->
+      Enum.reduce_while(clues, true, fn ({key2, word2}, acc) ->
+        if key1 != key2 and String.downcase(word1) == String.downcase(word2) do
+          {:halt, false}
+        else
+          {:cont, acc}
+        end
+      end)
+    end)
+    |> Map.new()
   end
 
   defp broadcast!(state) do
