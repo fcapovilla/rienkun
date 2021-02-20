@@ -19,14 +19,17 @@
         <label for="name">Nom de la salle</label>
         <input type="text" name="room" maxlength="50" value="<%= @room %>"/>
         <div>
-          <label for="custom_words">(Optionnel) Fichier de mots personnalisé</label>
-          <input name="custom_words" type="file"/>
-          <p>
-            <small>
-              Le fichier de mots doit être un simple fichier texte contenant un mot par ligne.<br/>
-              Il n'est pas possible d'ajouter des mots personnalisés à une salle déjà démarrée.
-            </small>
-          </p>
+          <button class="button button-clear" onclick="document.getElementById('advanced_options').classList.toggle('hidden');return false;">+ Options avancées</button>
+          <div id="advanced_options" class="hidden">
+            <label for="custom_words">Fichier de mots personnalisé</label>
+            <input name="custom_words" type="file"/>
+            <p>
+              <small>
+                Le fichier de mots doit être un simple fichier texte contenant un mot par ligne.<br/>
+                Il n'est pas possible d'ajouter des mots personnalisés à une salle déjà démarrée.
+              </small>
+            </p>
+          </div>
         </div>
         <input type="submit" value="Entrer"/>
       </fieldset>
