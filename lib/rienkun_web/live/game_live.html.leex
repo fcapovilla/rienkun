@@ -16,13 +16,13 @@
             <%= user.name %>
           <% end %>
           <%= if id == @game.guesser do %><span title="Actif">⭐</span><% end %>
-          <%= if @game.state == :enter_clues && Map.has_key?(@game.clues, id) do %>
+          <%= if @game.state == :enter_clues && @game.clues[id] do %>
             <span title="Indice envoyé">👍</span>
           <% end %>
-          <%= if @game.state == :validate_clues && Map.has_key?(@game.validation_votes, id) do %>
+          <%= if @game.state == :validate_clues && @game.validation_votes[id] do %>
             <span title="Vote envoyé">👍</span>
           <% end %>
-          <%= if @game.state == :guess_vote && Map.has_key?(@game.win_votes, id) do %>
+          <%= if @game.state == :guess_vote && @game.win_votes[id] do %>
             <span title="Vote envoyé">
               <%= if @game.win_votes[id] == :win do %>
                 👍
@@ -97,8 +97,8 @@
           <tbody>
             <%= for {id, clue} <- @game.clues do %>
               <tr>
-                <td><%= if Map.has_key?(@game.players, id), do: @game.players[id].name, else: "" %></td>
-                <%= if Map.has_key?(@game.valid_clues, id) do %>
+                <td><%= if @game.players[id], do: @game.players[id].name, else: "" %></td>
+                <%= if @game.valid_clues[id] do %>
                   <td><%= clue %></td>
                   <td><button class="button button-outline" phx-click="invalidate_clue" phx-value-id="<%= id %>" title="Supprimer">❌</button></td>
                   <td></td>
@@ -123,8 +123,8 @@
       <%= if @current_user == @game.guesser do %>
         <h2>Vos indices</h2>
         <ul>
-          <%= for {_id, clue} <- @game.valid_clues do %>
-            <li><%= clue %></li>
+          <%= for {id, clue} <- @game.valid_clues do %>
+            <li title="<%= if @game.players[id], do: @game.players[id].name, else: "" %>"><%= clue %></li>
           <% end %>
         </ul>
         <p>Devinez le mot mystère à l'aide des indices.</p>
@@ -136,8 +136,8 @@
         <p>Le mot mystère est <strong><%= @game.word %></strong></p>
         <h2>Les indices</h2>
         <ul>
-          <%= for {_id, clue} <- @game.valid_clues do %>
-            <li><%= clue %></li>
+          <%= for {id, clue} <- @game.valid_clues do %>
+            <li title="<%= if @game.players[id], do: @game.players[id].name, else: "" %>"><%= clue %></li>
           <% end %>
         </ul>
         <p>
@@ -162,7 +162,7 @@
         <p>Est-ce que le mot est bon?</p>
         <button phx-click="win_vote" phx-value-vote="win">Oui 👍</button>
         <button phx-click="win_vote" phx-value-vote="lose">Non 👎</button>
-        <%= if Map.has_key?(@game.win_votes, @current_user) do %>
+        <%= if @game.win_votes[@current_user] do %>
           <p>Votre réponse : <strong><%= if @game.win_votes[@current_user] == :win, do: "Oui 👍", else: "Non 👎" %></strong></p>
         <% end %>
       <% end %>

@@ -248,7 +248,7 @@ defmodule Rienkun.GameServer do
   defp get_next_guesser(players, guess_order, limit) do
     guesser = List.first(guess_order)
     guess_order = List.insert_at(List.delete_at(guess_order, 0), -1, guesser)
-    if Map.has_key?(players, guesser) do
+    if players[guesser] do
       {guesser, guess_order}
     else
       get_next_guesser(players, guess_order, limit - 1)
