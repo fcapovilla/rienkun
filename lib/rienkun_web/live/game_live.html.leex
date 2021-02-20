@@ -1,3 +1,4 @@
+<% guesser = Map.get(@game.players, @game.guesser) %>
 <div class="row">
   <div class="column column-25">
     <h2>Score</h2>
@@ -35,10 +36,10 @@
       <% end %>
     </ul>
     <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
-      <%= if !Map.has_key?(@game.players, @game.guesser) do %>
+      <%= if !guesser do %>
         <p>Le joueur actif a quitté la salle! Cliquez sur le bouton ci-dessous pour annuler la partie.</p>
       <% end %>
-      <button phx-click="reset_vote">Annuler</button>
+      <button phx-click="reset_vote" class="btn-danger">Annuler</button>
       <%= if @game.reset_votes != %{} do %>
         <p>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></p>
       <% end %>
@@ -109,7 +110,7 @@
             <% end %>
           </tbody>
         </table>
-        <button phx-click="validation_vote">Validation terminée</button>
+        <button phx-click="validation_vote">Validation terminée 👍</button>
         <p>Votes: <%= Enum.count(@game.validation_votes) %>/<%= Enum.count(@game.players) - 1 %></p>
       <% end %>
     <% end %>
@@ -136,7 +137,10 @@
             <li><%= clue %></li>
           <% end %>
         </ul>
-        <p>En attente de la réponse du joueur actif...</p>
+        <p>
+            En attente de la réponse
+            <%= if guesser, do: "de #{guesser.name}", else: "du joueur actif" %>...
+        </p>
       <% end %>
     <% end %>
 
@@ -147,7 +151,10 @@
         <p>Le mot était <strong><%= @game.word %></strong>.</p>
         <p>En attente du vote des autres joueurs...</p>
       <% else %>
-        <p>Le joueur actif a écrit <strong><%= @game.word_tried %></strong>.</p>
+        <p>
+          <%= if guesser, do: "#{guesser.name}", else: "Le joueur actif" %>
+          a écrit <strong><%= @game.word_tried %></strong>.
+        </p>
         <p>Le mot était <strong><%= @game.word %></strong>.</p>
         <p>Est-ce que le mot est bon?</p>
         <button phx-click="win_vote" phx-value-vote="win">Oui 👍</button>
@@ -166,7 +173,10 @@
 
     <%= if @game.state == :lose do %>
       <h1>Échec</h1>
-      <p>Le joueur actif a écrit "<%= @game.word_tried %>".</p>
+      <p>
+        <%= if guesser, do: "#{guesser.name}", else: "Le joueur actif" %>
+        a écrit "<%= @game.word_tried %>".
+      </p>
       <p>Le mot était <strong><%= @game.word %></strong>.</p>
       <button phx-click="start_game">Rejouer</button>
     <% end %>

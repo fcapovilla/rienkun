@@ -74,9 +74,9 @@ defmodule Rienkun.GameServer do
   end
 
   @impl true
+  def handle_call({:start_game}, _from, %{state: :enter_clues} = state), do: {:reply, :ok, state}
   def handle_call({:start_game}, _from, state) do
-    guesser = List.first(state.guess_order)
-    guess_order = List.insert_at(List.delete_at(state.guess_order, 0), -1, guesser)
+    {guesser, guess_order} = get_next_guesser(state.players, state.guess_order)
     word =
       File.read!("priv/words.txt")
       |> String.split("\n")
@@ -206,15 +206,29 @@ defmodule Rienkun.GameServer do
     end
   end
 
-  def handle_leaves(state, players) do
+  defp handle_leaves(state, players) do
     leaves = Enum.map(players, fn {id, %{metas: [meta|_]}} -> {id, meta} end) |> Map.new()
     players = Map.drop(state.players, Map.keys(leaves))
-    guess_order = state.guess_order -- Map.keys(leaves)
     case Enum.count(players) do
       x when x < 3 ->
-        %{state | state: :waiting_for_players, players: players, guess_order: guess_order}
+        %{state | state: :waiting_for_players, players: players}
       _ ->
-        %{state | players: players, guess_order: guess_order}
+        %{state | players: players}
+    end
+  end
+
+  defp get_next_guesser(players, guess_order, 0) do
+    # Could not find a guesser in time. Reset guess order.
+    guess_order = Map.keys(players)
+    {List.last(guess_order), guess_order}
+  end
+  defp get_next_guesser(players, guess_order, limit \\ 20) do
+    guesser = List.first(guess_order)
+    guess_order = List.insert_at(List.delete_at(guess_order, 0), -1, guesser)
+    if Map.has_key?(players, guesser) do
+      {guesser, guess_order}
+    else
+      get_next_guesser(players, guess_order, limit - 1)
     end
   end
 
