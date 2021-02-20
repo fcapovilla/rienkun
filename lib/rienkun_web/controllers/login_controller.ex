@@ -10,11 +10,20 @@
      |> render("login.html")
    end
 
-   def login(conn, %{"name" => name, "room" => room}) do
+   def login(conn, %{"name" => name, "room" => room} = params) do
      name = name |> String.trim() |> String.slice(0..50)
      room = room |> String.trim() |> String.slice(0..50)
 
      if name != "" and room != "" do
+       if !Rienkun.GameServer.get_pid(room) do
+         Rienkun.GameSupervisor.start_game(room)
+
+         if params["custom_words"] and params["custom_words"].path do
+           words = File.read!(params["custom_words"].path) |> String.split("\n")
+           Rienkun.GameServer.set_custom_words(room, words)
+         end
+       end
+
        conn
        |> put_session(:name, name)
        |> put_session(:room, room)

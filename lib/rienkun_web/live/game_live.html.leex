@@ -35,6 +35,9 @@
         </li>
       <% end %>
     </ul>
+    <%= if @game.custom_word_count > 0 do %>
+      Mots personnalisés : <%= @game.custom_word_count %>
+    <% end %>
     <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
       <%= if !guesser do %>
         <p>Le joueur actif a quitté la salle! Cliquez sur le bouton ci-dessous pour annuler la partie.</p>

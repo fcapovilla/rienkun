@@ -13,6 +13,10 @@ defmodule Rienkun.GameServer do
     GenServer.whereis({:via, Registry, {Rienkun.RoomRegistry, room}})
   end
 
+  def set_custom_words(room, words) do
+    GenServer.call(get_pid(room), {:set_custom_words, words})
+  end
+
   def start_game(room) do
     GenServer.call(get_pid(room), {:start_game})
   end
@@ -70,17 +74,29 @@ defmodule Rienkun.GameServer do
       reset_votes: %{},
       validation_votes: %{},
       win_votes: %{},
+      custom_word_count: 0,
+      custom_words: [],
     }}
   end
+
+  @impl true
+  def handle_call({:set_custom_words, words}, _from, %{state: :waiting_for_players} = state) do
+    {:reply, :ok, %{state | custom_words: words, custom_word_count: Enum.count(words)}}
+  end
+  def handle_call({:set_custom_words, _words}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:start_game}, _from, %{state: :enter_clues} = state), do: {:reply, :ok, state}
   def handle_call({:start_game}, _from, state) do
     {guesser, guess_order} = get_next_guesser(state.players, state.guess_order)
     word =
-      File.read!("priv/words.txt")
-      |> String.split("\n")
-      |> Enum.random()
+      if state.custom_word_count > 0 do
+        Enum.random(state.custom_words)
+      else
+        File.read!("priv/words.txt")
+        |> String.split("\n")
+        |> Enum.random()
+      end
     state = %{state |
       state: :enter_clues,
       guesser: guesser,
@@ -180,7 +196,7 @@ defmodule Rienkun.GameServer do
 
   @impl true
   def handle_call({:get_state}, _from, state) do
-    {:reply, state, state}
+    {:reply, get_public_state(state), state}
   end
 
   @impl true
@@ -252,8 +268,14 @@ defmodule Rienkun.GameServer do
     |> Map.new()
   end
 
+  defp get_public_state(state) do
+    Map.drop(state, [:guess_order, :custom_words])
+  end
+
   defp broadcast!(state) do
-    Phoenix.PubSub.broadcast!(PubSub, "rienkun:room:" <> state.room, %{event: :state_changed, payload: state})
+    Phoenix.PubSub.broadcast!(PubSub, "rienkun:room:" <> state.room, %{
+      event: :state_changed, payload: get_public_state(state)
+    })
     state
   end
 end

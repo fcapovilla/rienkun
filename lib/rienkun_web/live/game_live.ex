@@ -15,17 +15,17 @@ defmodule RienkunWeb.GameLive do
       Phoenix.PubSub.subscribe(PubSub, "rienkun:room:" <> room)
     end
 
-    if !Rienkun.GameServer.get_pid(room) do
-      Rienkun.GameSupervisor.start_game(room)
+    if Rienkun.GameServer.get_pid(room) do
+      {
+        :ok,
+        socket
+        |> assign(:current_user, player_id)
+        |> assign(:users, %{})
+        |> assign(:game, Rienkun.GameServer.get_state(room))
+      }
+    else
+      {:ok, socket |> redirect(to: Routes.login_path(socket, :index, room: room))}
     end
-
-    {
-      :ok,
-      socket
-      |> assign(:current_user, player_id)
-      |> assign(:users, %{})
-      |> assign(:game, Rienkun.GameServer.get_state(room))
-    }
   end
   def mount(%{"room" => room}, _session, socket) do
     room = room |> String.trim() |> String.slice(0..50)

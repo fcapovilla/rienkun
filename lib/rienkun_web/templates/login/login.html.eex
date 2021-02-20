@@ -11,13 +11,23 @@
 </div>
 <div class="row">
   <div class="column column-50 column-offset-25">
-    <form action="/" method="post" autocomplete="off">
+    <form action="/" method="post" autocomplete="off" enctype="multipart/form-data">
       <fieldset>
         <input type="hidden" name="_csrf_token" value="<%= Phoenix.Controller.get_csrf_token() %>">
         <label for="name">Nom du joueur</label>
         <input type="text" name="name" maxlength="50" value="<%= @name %>" autofocus/>
         <label for="name">Nom de la salle</label>
         <input type="text" name="room" maxlength="50" value="<%= @room %>"/>
+        <div>
+          <label for="custom_words">(Optionnel) Fichier de mots personnalisé</label>
+          <input name="custom_words" type="file"/>
+          <p>
+            <small>
+              Le fichier de mots doit être un simple fichier texte contenant un mot par ligne.<br/>
+              Il n'est pas possible d'ajouter des mots personnalisés à une salle déjà démarrée.
+            </small>
+          </p>
+        </div>
         <input type="submit" value="Entrer"/>
       </fieldset>
     </form>
