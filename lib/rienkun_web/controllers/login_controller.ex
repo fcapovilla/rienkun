@@ -18,7 +18,7 @@
        if !Rienkun.GameServer.get_pid(room) do
          Rienkun.GameSupervisor.start_game(room)
 
-         if params["custom_words"] and params["custom_words"].path do
+         if params["custom_words"] != nil and params["custom_words"].path do
            words = File.read!(params["custom_words"].path) |> String.split("\n")
            Rienkun.GameServer.set_custom_words(room, words)
          end
