@@ -1,63 +1,14 @@
 <% guesser = Map.get(@game.players, @game.guesser) %>
-<div class="row">
-  <div class="column column-25">
-    <h2>Score</h2>
-    <p>
-      <div><%= @game.wins %> Victoires</div>
-      <div><%= @game.losses %> Défaites</div>
-    </p>
-    <h2>Joueurs</h2>
-    <ul>
-      <%= for {id, user} <- @game.players do %>
-        <li>
-          <%= if id == @game.guesser do %>
-            <strong><%= user.name %></strong>
-          <% else %>
-            <%= user.name %>
-          <% end %>
-          <%= if id == @game.guesser do %><span title="Actif">⭐</span><% end %>
-          <%= if @game.state == :enter_clues && @game.clues[id] do %>
-            <span title="Indice envoyé">👍</span>
-          <% end %>
-          <%= if @game.state == :validate_clues && @game.validation_votes[id] do %>
-            <span title="Vote envoyé">👍</span>
-          <% end %>
-          <%= if @game.state == :guess_vote && @game.win_votes[id] do %>
-            <span title="Vote envoyé">
-              <%= if @game.win_votes[id] == :win do %>
-                👍
-              <% else %>
-                👎
-              <% end %>
-            </span>
-          <% end %>
-          <%= if id == @current_user do %><span title="Moi">👤</span><% end %>
-        </li>
-      <% end %>
-    </ul>
-    <%= if @game.custom_words do %>
-      <div><small><strong>Mots personnalisés</strong></small></div>
-    <% end %>
-    <div><small>Banque de mots : <%= @game.word_count %></small></div>
-    <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
-      <%= if !guesser do %>
-        <p>Le joueur actif a quitté la salle! Cliquez sur le bouton ci-dessous pour annuler la partie.</p>
-      <% end %>
-      <button phx-click="reset_vote" class="btn-danger">Annuler</button>
-      <%= if @game.reset_votes != %{} do %>
-      <p><small>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></small></p>
-      <% end %>
-    <% end %>
-  </div>
+<div class="row row-reverse">
   <div class="column column-75">
     <%= if @game.state == :waiting_for_players do %>
-      <h1>Salle d'attente</h2>
+      <h1>Salle d'attente</h1>
       <p>Il faut au moins 3 joueurs pour commencer la partie.</p>
       <p>En attente de plus de joueurs...</p>
     <% end %>
 
     <%= if @game.state == :ready do %>
-      <h1>Salle d'attente</h2>
+      <h1>Salle d'attente</h1>
       <p>Vous pouvez maintenant démarrer une partie à <%= Enum.count(@game.players) %> joueurs.</p>
       <button phx-click="start_game">Démarrer</button>
     <% end %>
@@ -185,4 +136,53 @@
       <button phx-click="start_game">Rejouer</button>
     <% end %>
   </div>
-</section>
+  <div class="column column-25">
+    <h2>Score</h2>
+    <p>
+      <div><%= @game.wins %> Victoires</div>
+      <div><%= @game.losses %> Défaites</div>
+    </p>
+    <h2>Joueurs</h2>
+    <ul>
+      <%= for {id, user} <- @game.players do %>
+        <li>
+          <%= if id == @game.guesser do %>
+            <strong><%= user.name %></strong>
+          <% else %>
+            <%= user.name %>
+          <% end %>
+          <%= if id == @game.guesser do %><span title="Actif">⭐</span><% end %>
+          <%= if @game.state == :enter_clues && @game.clues[id] do %>
+            <span title="Indice envoyé">👍</span>
+          <% end %>
+          <%= if @game.state == :validate_clues && @game.validation_votes[id] do %>
+            <span title="Vote envoyé">👍</span>
+          <% end %>
+          <%= if @game.state == :guess_vote && @game.win_votes[id] do %>
+            <span title="Vote envoyé">
+              <%= if @game.win_votes[id] == :win do %>
+                👍
+              <% else %>
+                👎
+              <% end %>
+            </span>
+          <% end %>
+          <%= if id == @current_user do %><span title="Moi">👤</span><% end %>
+        </li>
+      <% end %>
+    </ul>
+    <%= if @game.custom_words do %>
+      <div><small><strong>Mots personnalisés</strong></small></div>
+    <% end %>
+    <div><small>Banque de mots : <%= @game.word_count %></small></div>
+    <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
+      <%= if !guesser do %>
+        <p>Le joueur actif a quitté la salle! Cliquez sur le bouton ci-dessous pour annuler la partie.</p>
+      <% end %>
+      <button phx-click="reset_vote" class="btn-danger">Annuler</button>
+      <%= if @game.reset_votes != %{} do %>
+      <p><small>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></small></p>
+      <% end %>
+    <% end %>
+  </div>
+</div>
