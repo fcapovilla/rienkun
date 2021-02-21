@@ -58,7 +58,7 @@ defmodule Rienkun.GameServer do
   @impl true
   def init(room) do
     Phoenix.PubSub.subscribe(PubSub, "rienkun:presence:" <> room)
-
+    word_list = File.read!("priv/words.txt") |> String.split("\n", trim: true)
     {:ok, %{
       room: room,
       state: :waiting_for_players,
@@ -74,14 +74,15 @@ defmodule Rienkun.GameServer do
       reset_votes: %{},
       validation_votes: %{},
       win_votes: %{},
-      custom_word_count: 0,
-      custom_words: [],
+      word_list: word_list,
+      word_count: Enum.count(word_list),
+      custom_words: false,
     }}
   end
 
   @impl true
   def handle_call({:set_custom_words, words}, _from, %{state: :waiting_for_players} = state) do
-    {:reply, :ok, %{state | custom_words: words, custom_word_count: Enum.count(words)}}
+    {:reply, :ok, %{state | word_list: words, word_count: Enum.count(words), custom_words: true}}
   end
   def handle_call({:set_custom_words, _words}, _from, state), do: {:reply, :ok, state}
 
@@ -89,13 +90,16 @@ defmodule Rienkun.GameServer do
   def handle_call({:start_game}, _from, %{state: :enter_clues} = state), do: {:reply, :ok, state}
   def handle_call({:start_game}, _from, state) do
     {guesser, guess_order} = get_next_guesser(state.players, state.guess_order)
-    word =
-      if state.custom_word_count > 0 do
-        Enum.random(state.custom_words)
+    {word, word_list, custom_words} =
+      if state.word_count > 0 do
+        word = Enum.random(state.word_list)
+        word_list = List.delete(state.word_list, word)
+        {word, word_list, state.custom_words}
       else
-        File.read!("priv/words.txt")
-        |> String.split("\n")
-        |> Enum.random()
+        word_list = File.read!("priv/words.txt") |> String.split("\n", trim: true)
+        word = Enum.random(word_list)
+        word_list = List.delete(word_list, word)
+        {word, word_list, false}
       end
     state = %{state |
       state: :enter_clues,
@@ -108,6 +112,9 @@ defmodule Rienkun.GameServer do
       reset_votes: %{},
       validation_votes: %{},
       win_votes: %{},
+      word_list: word_list,
+      word_count: Enum.count(word_list),
+      custom_words: custom_words,
     }
     {:reply, :ok, broadcast!(state)}
   end
@@ -269,7 +276,7 @@ defmodule Rienkun.GameServer do
   end
 
   defp get_public_state(state) do
-    Map.drop(state, [:guess_order, :custom_words])
+    Map.drop(state, [:guess_order, :word_list])
   end
 
   defp broadcast!(state) do

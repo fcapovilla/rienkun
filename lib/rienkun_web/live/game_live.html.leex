@@ -35,16 +35,17 @@
         </li>
       <% end %>
     </ul>
-    <%= if @game.custom_word_count > 0 do %>
-      Mots personnalisés : <%= @game.custom_word_count %>
+    <%= if @game.custom_words do %>
+      <div><small><strong>Mots personnalisés</strong></small></div>
     <% end %>
+    <div><small>Banque de mots : <%= @game.word_count %></small></div>
     <%= if @game.state != :waiting_for_players and @game.state != :ready do %>
       <%= if !guesser do %>
         <p>Le joueur actif a quitté la salle! Cliquez sur le bouton ci-dessous pour annuler la partie.</p>
       <% end %>
       <button phx-click="reset_vote" class="btn-danger">Annuler</button>
       <%= if @game.reset_votes != %{} do %>
-        <p>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></p>
+      <p><small>Votes: <%= Enum.count(@game.reset_votes) %>/<%= Enum.count(@game.players) %></small></p>
       <% end %>
     <% end %>
   </div>
