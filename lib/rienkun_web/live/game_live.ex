@@ -7,10 +7,12 @@ defmodule RienkunWeb.GameLive do
   @impl true
   def mount(%{"room" => room}, %{"name" => name, "player_id" => player_id}, socket) do
     room = room |> String.trim() |> String.slice(0..50)
+
     if connected?(socket) do
-      {:ok, _} = Presence.track(self(), "rienkun:presence:" <> room, player_id, %{
-        name: name,
-      })
+      {:ok, _} =
+        Presence.track(self(), "rienkun:presence:" <> room, player_id, %{
+          name: name
+        })
 
       Phoenix.PubSub.subscribe(PubSub, "rienkun:room:" <> room)
     end
@@ -27,6 +29,7 @@ defmodule RienkunWeb.GameLive do
       {:ok, socket |> redirect(to: Routes.login_path(socket, :index, room: room))}
     end
   end
+
   def mount(%{"room" => room}, _session, socket) do
     room = room |> String.trim() |> String.slice(0..50)
     {:ok, socket |> redirect(to: Routes.login_path(socket, :index, room: room))}
@@ -53,13 +56,18 @@ defmodule RienkunWeb.GameLive do
   @impl true
   def handle_event("add_clue", %{"word" => word}, socket) do
     word = String.trim(word)
+
     cond do
       word == "" ->
         {:noreply, socket |> put_flash(:error, "Votre indice ne peut pas être vide!")}
+
       String.contains?(word, " ") ->
         {:noreply, socket |> put_flash(:error, "Votre indice doit être un seul mot!")}
+
       String.length(word) > 50 ->
-        {:noreply, socket |> put_flash(:error, "Votre indice ne peut pas dépasser 50 caractères!")}
+        {:noreply,
+         socket |> put_flash(:error, "Votre indice ne peut pas dépasser 50 caractères!")}
+
       true ->
         Rienkun.GameServer.add_clue(socket.assigns.game.room, socket.assigns.current_user, word)
         {:noreply, socket |> clear_flash()}
@@ -105,13 +113,18 @@ defmodule RienkunWeb.GameLive do
   @impl true
   def handle_event("guess_word", %{"word" => word}, socket) do
     word = String.trim(word)
+
     cond do
       word == "" ->
         {:noreply, socket |> put_flash(:error, "Votre réponse ne peut pas être vide!")}
+
       String.contains?(word, " ") ->
         {:noreply, socket |> put_flash(:error, "Votre réponse doit être un seul mot!")}
+
       String.length(word) > 50 ->
-        {:noreply, socket |> put_flash(:error, "Votre réponse ne peut pas dépasser 50 caractères!")}
+        {:noreply,
+         socket |> put_flash(:error, "Votre réponse ne peut pas dépasser 50 caractères!")}
+
       true ->
         Rienkun.GameServer.guess_word(socket.assigns.game.room, word)
         {:noreply, socket}

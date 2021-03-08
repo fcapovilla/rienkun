@@ -59,37 +59,42 @@ defmodule Rienkun.GameServer do
   def init(room) do
     Phoenix.PubSub.subscribe(PubSub, "rienkun:presence:" <> room)
     word_list = File.read!("priv/words.txt") |> String.split("\n", trim: true)
-    {:ok, %{
-      room: room,
-      state: :waiting_for_players,
-      word: nil,
-      clues: %{},
-      valid_clues: %{},
-      players: %{},
-      guess_order: [],
-      guesser: nil,
-      wins: 0,
-      losses: 0,
-      word_tried: nil,
-      reset_votes: %{},
-      validation_votes: %{},
-      win_votes: %{},
-      word_list: word_list,
-      word_count: Enum.count(word_list),
-      custom_words: false,
-    }}
+
+    {:ok,
+     %{
+       room: room,
+       state: :waiting_for_players,
+       word: nil,
+       clues: %{},
+       valid_clues: %{},
+       players: %{},
+       guess_order: [],
+       guesser: nil,
+       wins: 0,
+       losses: 0,
+       word_tried: nil,
+       reset_votes: %{},
+       validation_votes: %{},
+       win_votes: %{},
+       word_list: word_list,
+       word_count: Enum.count(word_list),
+       custom_words: false
+     }}
   end
 
   @impl true
   def handle_call({:set_custom_words, words}, _from, %{state: :waiting_for_players} = state) do
     {:reply, :ok, %{state | word_list: words, word_count: Enum.count(words), custom_words: true}}
   end
+
   def handle_call({:set_custom_words, _words}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:start_game}, _from, %{state: :enter_clues} = state), do: {:reply, :ok, state}
+
   def handle_call({:start_game}, _from, state) do
     {guesser, guess_order} = get_next_guesser(state.players, state.guess_order)
+
     {word, word_list, custom_words} =
       if state.word_count > 0 do
         word = Enum.random(state.word_list)
@@ -101,35 +106,41 @@ defmodule Rienkun.GameServer do
         word_list = List.delete(word_list, word)
         {word, word_list, false}
       end
-    state = %{state |
-      state: :enter_clues,
-      guesser: guesser,
-      guess_order: guess_order,
-      word: word,
-      clues: %{},
-      valid_clues: %{},
-      word_tried: nil,
-      reset_votes: %{},
-      validation_votes: %{},
-      win_votes: %{},
-      word_list: word_list,
-      word_count: Enum.count(word_list),
-      custom_words: custom_words,
+
+    state = %{
+      state
+      | state: :enter_clues,
+        guesser: guesser,
+        guess_order: guess_order,
+        word: word,
+        clues: %{},
+        valid_clues: %{},
+        word_tried: nil,
+        reset_votes: %{},
+        validation_votes: %{},
+        win_votes: %{},
+        word_list: word_list,
+        word_count: Enum.count(word_list),
+        custom_words: custom_words
     }
+
     {:reply, :ok, broadcast!(state)}
   end
 
   @impl true
   def handle_call({:add_clue, player, clue}, _from, %{state: :enter_clues} = state) do
     clues = Map.put(state.clues, player, clue)
+
     state =
       if Enum.count(clues) == Enum.count(state.players) - 1 do
         %{state | state: :validate_clues, clues: clues, valid_clues: validate_clues(clues)}
       else
         %{state | clues: clues}
       end
+
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:add_clue, _player, _clue}, _from, state), do: {:reply, :ok, state}
 
   @impl true
@@ -137,6 +148,7 @@ defmodule Rienkun.GameServer do
     state = %{state | valid_clues: Map.drop(state.valid_clues, [player])}
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:invalidate_clue, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
@@ -144,19 +156,23 @@ defmodule Rienkun.GameServer do
     state = %{state | valid_clues: Map.put(state.valid_clues, player, state.clues[player])}
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:validate_clue, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:validation_vote, player}, _from, %{state: :validate_clues} = state) do
     validation_votes = Map.put(state.validation_votes, player, true)
+
     state =
       if Enum.count(validation_votes) > (Enum.count(state.players) - 1) / 2 do
         %{state | state: :guess_word, validation_votes: %{}}
       else
         %{state | validation_votes: validation_votes}
       end
+
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:validation_vote, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
@@ -167,14 +183,17 @@ defmodule Rienkun.GameServer do
       else
         %{state | state: :guess_vote, word_tried: word}
       end
+
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:guess_word, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:win_vote, player, vote}, _from, %{state: :guess_vote} = state) do
     win_votes = Map.put(state.win_votes, player, vote)
     total_same = win_votes |> Enum.filter(&(elem(&1, 1) == vote)) |> Enum.count()
+
     state =
       if total_same > (Enum.count(state.players) - 1) / 2 do
         if vote == :win do
@@ -185,19 +204,23 @@ defmodule Rienkun.GameServer do
       else
         %{state | win_votes: win_votes}
       end
+
     {:reply, :ok, broadcast!(state)}
   end
+
   def handle_call({:win_vote, _player}, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_call({:reset_vote, player}, _from, state) do
     reset_votes = Map.put(state.reset_votes, player, true)
+
     state =
       if Enum.count(reset_votes) > Enum.count(state.players) / 2 do
         %{state | state: :ready, reset_votes: %{}}
       else
         %{state | reset_votes: reset_votes}
       end
+
     {:reply, :ok, broadcast!(state)}
   end
 
@@ -221,9 +244,10 @@ defmodule Rienkun.GameServer do
   end
 
   defp handle_joins(state, players) do
-    joins = Enum.map(players, fn {id, %{metas: [meta|_]}} -> {id, meta} end) |> Map.new()
+    joins = players |> Enum.map(fn {id, %{metas: [meta | _]}} -> {id, meta} end) |> Map.new()
     players = Map.merge(state.players, joins)
     guess_order = Enum.uniq(state.guess_order ++ Map.keys(joins))
+
     if Enum.count(players) >= 3 do
       if state.state == :waiting_for_players do
         %{state | state: :ready, players: players, guess_order: guess_order}
@@ -236,25 +260,30 @@ defmodule Rienkun.GameServer do
   end
 
   defp handle_leaves(state, players) do
-    leaves = Enum.map(players, fn {id, %{metas: [meta|_]}} -> {id, meta} end) |> Map.new()
+    leaves = players |> Enum.map(fn {id, %{metas: [meta | _]}} -> {id, meta} end) |> Map.new()
     players = Map.drop(state.players, Map.keys(leaves))
+
     case Enum.count(players) do
       x when x < 3 ->
         %{state | state: :waiting_for_players, players: players}
+
       _ ->
         %{state | players: players}
     end
   end
 
   defp get_next_guesser(players, guess_order, limit \\ 20)
+
   defp get_next_guesser(players, _guess_order, 0) do
     # Could not find a guesser in time. Reset guess order.
     guess_order = Map.keys(players)
     {List.last(guess_order), guess_order}
   end
+
   defp get_next_guesser(players, guess_order, limit) do
     guesser = List.first(guess_order)
-    guess_order = List.insert_at(List.delete_at(guess_order, 0), -1, guesser)
+    guess_order = guess_order |> List.delete_at(0) |> List.insert_at(-1, guesser)
+
     if players[guesser] do
       {guesser, guess_order}
     else
@@ -264,7 +293,7 @@ defmodule Rienkun.GameServer do
 
   defp validate_clues(clues) do
     Enum.filter(clues, fn {key1, word1} ->
-      Enum.reduce_while(clues, true, fn ({key2, word2}, acc) ->
+      Enum.reduce_while(clues, true, fn {key2, word2}, acc ->
         if key1 != key2 and String.downcase(word1) == String.downcase(word2) do
           {:halt, false}
         else
@@ -281,8 +310,10 @@ defmodule Rienkun.GameServer do
 
   defp broadcast!(state) do
     Phoenix.PubSub.broadcast!(PubSub, "rienkun:room:" <> state.room, %{
-      event: :state_changed, payload: get_public_state(state)
+      event: :state_changed,
+      payload: get_public_state(state)
     })
+
     state
   end
 end
