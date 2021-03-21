@@ -16,7 +16,7 @@ Vous pouvez ensuite visiter [`localhost:4000`](http://localhost:4000) dans votre
 
 Pour démarrer le serveur dans Docker, aller dans le dossier `release` et modifier le fichier `docker-compose.yml` pour y entrer vos variables d'environnement.
 
-La variable `SECRET_KEY` doit contenir une clé générée avec la commande `mix phx.gen.secret`.
+La variable `SECRET_KEY_BASE` doit contenir une clé générée avec la commande `mix phx.gen.secret`.
 
 Une fois le fichier modifié, démarrer le serveur avec la commande `docker-compose up`.
 
